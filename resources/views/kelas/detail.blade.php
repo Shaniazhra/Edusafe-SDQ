@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kelas {{ $kode }} — SMPN 216 Jakarta</title>
+    <link rel="icon" type="image/png" href="{{ asset('logo-smpn216.png') }}">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Source+Serif+4:wght@500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700&display=swap" rel="stylesheet">
+    @vite('resources/css/tema.css')
+
+    <style>
+        :root {
+            --navy: #0F2747;
+            --brand: #1D5FBF;
+            --brand-soft: #E8F0FB;
+            --bg: #F3F5F9;
+            --ink: #14233B;
+            --ink-2: #475569;
+            --ink-3: #6B7A90;
+            --line: #E3E8F0;
+            --ok: #0F8A5F;
+            --ok-bg: #E3F5ED;
+            --warn: #B7690B;
+            --warn-bg: #FDF1DC;
+            --act: #6D3FD0;
+            --act-bg: #EEE8FB;
+            --ai: #0A78B5;
+            --ai-bg: #E2F2FA;
+        }
+
+        body {
+            color: var(--ink);
+            background:
+                radial-gradient(900px 400px at 85% -80px, #DCE8FA 0%, transparent 70%),
+                var(--bg);
+            background-attachment: fixed;
+        }
+
+        .material-symbols-outlined {
+            font-variation-settings:
+                'FILL' 0,
+                'wght' 400,
+                'GRAD' 0,
+                'opsz' 24;
+        }
+
+        .scrollbar-thin::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        .scrollbar-thin::-webkit-scrollbar-thumb {
+            background: #CBD5E1;
+            border-radius: 99px;
+        }
+
+        :focus-visible {
+            outline: 2px solid var(--brand);
+            outline-offset: 2px;
+        }
+
+        /* CSS khusus halaman Kelas */
+        /* CONTENT */
+        .page-content {
+            background: transparent;
+        }
+
+        .table-card {
+            background: #fff;
+            border: 1px solid #E3E8F0;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(15,39,71,.025);
+        }
+
+        .btn-detail {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: .75rem;
+            font-weight: 600;
+            color: #2563EB;
+            padding: 6px 12px;
+            border-radius: 9px;
+            border: 1px solid #E2E8F0;
+            transition: .15s;
+        }
+
+        .btn-detail:hover {
+            background: #EFF6FF;
+        }
+    </style>
+</head>
+
+<body class="flex min-h-screen">
+
+@include('partials.sidebar')
+
+{{-- MAIN --}}
+<main class="flex-1 min-w-0 flex flex-col">
+
+    <div class="page-content flex-1 overflow-y-auto scrollbar-thin p-4 md:p-8 space-y-6">
+
+        {{-- TOMBOL LULUS --}}
+        @if(preg_match('/^9-\d+$/', trim($kode)) && $siswaList->count() > 0)
+
+            <form action="{{ route('kelas.lulus', ['kode' => $kode]) }}"
+                  method="POST"
+                  onsubmit="return confirm('Yakin semua siswa aktif di kelas {{ $kode }} sudah lulus? Data SDQ tetap akan disimpan.');">
+
+                @csrf
+
+                <button type="submit"
+                        class="inline-flex items-center px-4 py-2.5 rounded-lg bg-green-600 text-white text-sm font-semibold hover:bg-green-700 transition">
+
+                    <span class="material-symbols-outlined align-middle mr-1.5" style="font-size:18px">
+                        school
+                    </span>
+
+                    Tandai Semua Siswa Lulus
+
+                </button>
+
+            </form>
+
+        @endif
+
+        {{-- TABEL --}}
+        <section class="table-card">
+
+            <div class="px-5 py-4 border-b border-[#E3E8F0] flex items-center justify-between">
+
+                <div>
+                    <h3 class="text-sm font-bold text-[#14233B]">
+                        Data Siswa
+                    </h3>
+
+                    <p class="text-xs text-[#6B7A90] mt-0.5">
+                        Daftar siswa dan hasil skrining terakhir
+                    </p>
+                </div>
+
+            </div>
+
+            <div class="overflow-x-auto scrollbar-thin">
+
+                <table class="w-full text-sm">
+
+                    <thead>
+                        <tr class="bg-[#EFF6FF] text-xs text-[#1E40AF] uppercase tracking-wide">
+
+                            <th class="px-5 py-3 text-left font-semibold">
+                                Nama
+                            </th>
+
+                            <th class="px-5 py-3 text-left font-semibold">
+                                NIS
+                            </th>
+
+                            <th class="px-5 py-3 text-left font-semibold">
+                                Hasil Terakhir
+                            </th>
+
+                            <th class="px-5 py-3 text-left font-semibold">
+                                Total Skor
+                            </th>
+
+                            <th class="px-5 py-3 text-left font-semibold">
+                                Tanggal Isi
+                            </th>
+
+                            <th class="px-5 py-3 text-left font-semibold">
+                                Aksi
+                            </th>
+
+                        </tr>
+                    </thead>
+
+                    <tbody class="divide-y divide-[#E2E8F0]">
+
+                        @forelse($siswaList as $siswa)
+
+                            @php
+                                $h = $siswa->hasil_terakhir;
+
+                                $badge = match($h->hasil_label ?? null) {
+                                    'Normal'     => 'bg-[#D1FAE5] text-[#059669]',
+                                    'Borderline' => 'bg-[#FEF3C7] text-[#D97706]',
+                                    'Abnormal'   => 'bg-[#EDE9FE] text-[#7C3AED]',
+                                    default      => 'bg-[#E2E8F0] text-[#475569]',
+                                };
+                            @endphp
+
+                            <tr class="hover:bg-[#F8FAFC] transition-colors">
+
+                                <td class="px-5 py-3.5 font-semibold text-[#1E293B]">
+                                    {{ $siswa->name }}
+                                </td>
+
+                                <td class="px-5 py-3.5 text-[#64748B]">
+                                    {{ $siswa->nis ?? '-' }}
+                                </td>
+
+                                <td class="px-5 py-3.5">
+
+                                    @if($h)
+
+                                        <span class="px-2.5 py-1 rounded-full text-xs font-bold {{ $badge }}">
+                                            {{ $h->hasil_label }}
+                                        </span>
+
+                                    @else
+
+                                        <span class="text-xs text-[#94A3B8] italic">
+                                            Belum mengisi
+                                        </span>
+
+                                    @endif
+
+                                </td>
+
+                                <td class="px-5 py-3.5 text-[#64748B]">
+                                    {{ $h ? $h->total_kesulitan . '/40' : '-' }}
+                                </td>
+
+                                <td class="px-5 py-3.5 text-[#64748B] text-xs">
+                                    {{ $h ? $h->created_at->format('d/m/Y') : '-' }}
+                                </td>
+
+                                <td class="px-5 py-3.5 text-left">
+
+                                    @if($h)
+
+                                        <a href="/riwayat/{{ $h->id }}"
+                                           class="btn-detail">
+
+                                            Detail
+
+                                            <span class="material-symbols-outlined" style="font-size:13px">
+                                                chevron_right
+                                            </span>
+
+                                        </a>
+
+                                    @else
+
+                                        <span class="text-xs text-[#CBD5E1]">
+                                            -
+                                        </span>
+
+                                    @endif
+
+                                </td>
+
+                            </tr>
+
+                        @empty
+
+                            <tr>
+
+                                <td colspan="6"
+                                    class="px-5 py-16 text-center text-[#64748B] text-sm">
+
+                                    Tidak ada siswa di kelas ini
+
+                                </td>
+
+                            </tr>
+
+                        @endforelse
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </section>
+
+        <footer class="pt-4 border-t border-[#E3E8F0] flex justify-between items-center flex-wrap gap-2">
+
+            <p class="text-xs text-[#6B7A90]">
+                © 2026 SMPN 216 Jakarta — Portal Skrining Kesehatan Mental Siswa
+            </p>
+
+            <p class="text-xs text-[#6B7A90]">
+                Powered by SDQ + Gaussian Naive Bayes
+            </p>
+
+        </footer>
+
+    </div>
+
+</main>
+
+</body>
+</html>
